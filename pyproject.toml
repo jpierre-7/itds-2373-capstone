@@ -1,0 +1,35 @@
+[project]
+name = "capstone"
+version = "0.1.0"
+description = "ITDS 2373 capstone: anime acquisition strategy from MyAnimeList data"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "jupyterlab>=4.6.5",
+    "kagglehub>=1.0.3",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.4",
+    "pandas>=3.1.0",
+    "pyarrow>=26.0.0",
+    "scikit-learn>=1.9.1",
+    "seaborn>=0.13.2",
+]
+
+[project.scripts]
+download-data = "capstone.data:main"
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"

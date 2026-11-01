@@ -1,0 +1,18 @@
+# Data: fetched with `uv run download-data`, never committed
+data/*
+!data/README.md
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

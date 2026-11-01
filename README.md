@@ -14,6 +14,31 @@ Group capstone project for **ITDS 2373 Data Mining Methods** (HCC Eagle Online).
 
 The assignment is written for 4 members, each doing about 25% of the work. Every member must document their own contributions clearly.
 
+## Setup
+
+The project uses [uv](https://docs.astral.sh/uv/) to manage Python and its packages. `pyproject.toml` pins Python 3.13, and `uv.lock` pins the exact version of every package, so everyone runs the same environment.
+
+1. **Install uv** (one time):
+   - macOS / Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+   - Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+2. **Clone the repo and install the environment.** uv downloads Python 3.13 for you if you don't have it.
+   ```sh
+   git clone https://github.com/jpierre-7/itds-2373-capstone.git
+   cd itds-2373-capstone
+   uv sync
+   ```
+3. **Download the dataset** (about 217 MB to download, about 700 MB once unzipped). No Kaggle account is needed.
+   ```sh
+   uv run download-data
+   ```
+   This puts `animes.csv`, `profiles.csv` and `reviews.csv` in `data/raw/`. It's safe to run again: if the files are already there, it does nothing. The download is pinned to version 1 of the Kaggle dataset, so everyone gets the same data. kagglehub also keeps a cached copy in `~/.cache/kagglehub/` (about 700 MB). If `data/raw/` is deleted, the next run copies from that cache. You can delete the cache to free space. The `data/` folder is gitignored, so never commit data files.
+4. **Start working:**
+   - `uv run jupyter lab` opens notebooks.
+   - `uv run pytest` runs the tests.
+   - `uv add <package>` adds a dependency. Commit the updated `pyproject.toml` and `uv.lock` so everyone gets it.
+
+If you use VS Code or another editor, select `.venv` as the Python interpreter.
+
 ## Business Scenario
 
 A new streaming service has hired us as a Data Mining Consulting Team to expand its anime catalog. The Chief Content Officer (CCO) has set aside a large acquisition budget to license **10 anime titles** from the MyAnimeList database. The executive team wants more than popular shows. They want anime that:
