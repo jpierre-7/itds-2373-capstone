@@ -2,6 +2,8 @@
 
 Source: Kaggle [`marlesson/myanimelist-dataset-animes-profiles-reviews`](https://www.kaggle.com/datasets/marlesson/myanimelist-dataset-animes-profiles-reviews), version 1, fetched with `uv run download-data`. All figures come from `notebooks/john/01-data-dictionary.ipynb`.
 
+> **Working on analysis? Use the cleaned tables, not the raw files.** See [Cleaned tables](#cleaned-tables) at the bottom of this page.
+
 **% Missing is measured after removing duplicate keys** (one row per anime, profile, or review). The raw files contain many duplicate rows; see [Data-quality notes](#data-quality-notes).
 
 ## How the files relate
@@ -71,7 +73,7 @@ Findings for the cleaning step (#4). Each note states what was measured and what
 
 1. **Heavy duplication.** Exact duplicate rows: 2,943 in `animes` (15%), 33,825 in `profiles` (41%), 61,593 in `reviews` (32%). Every figure in the analysis must be computed after de-duplication, or counts like "reviews per anime" will be inflated.
 2. **Conflicting copies of the same anime.** 152 anime IDs have copies that differ. The differences are in `members` (138 IDs), `popularity` (53), and `ranked` (10), consistent with the same page scraped on different dates. *Decision for #4:* which copy to keep. Keeping the highest `members` value is the natural "latest snapshot" choice. 17 profiles also have conflicting copies. All 17 differ in `favorites_anime`, and one also differs in `birthday`.
-3. **Review coverage is thin and uneven.** Only 8,113 of 16,216 anime (50%) have any reviews. Among those, the median is 3 reviews and the maximum is 1,292. Any review-based metric (sentiment, average review score) is missing for half the catalog and unreliable for titles with very few reviews. *Decision for #4/#6:* a minimum review count before a review-based metric is trusted.
+3. **Review coverage is thin and uneven.** Only 8,113 of 16,216 anime (50%) have any reviews. Among those, the median is 3 reviews and the maximum is 1,292. Any review-based metric (sentiment, average review score) is missing for half the catalog and unreliable for titles with very few reviews. *Decision for #4/#6:* a minimum review count before a review-based metric is trusted. **Update from cleaning (#4):** review counts are also capped. 172 anime have exactly 20 reviews, which points to a one-page scrape limit, and *Hunter x Hunter (2011)* has none. `n_reviews` is therefore not a measure of review volume. See `report/data-cleaning.md`, section 6.
 4. **Out-of-range review scores.** One review (uid 6424) has every score set to 0, and one (uid 252847) has every score set to 11. All other reviews are 1–10. Treat both as invalid.
 5. **Missing anime fields.** `ranked` 10.26%, `synopsis` 4.71%, `episodes` 3.03%, `score` 2.10%. `score` and `ranked` are core success measures. *Decision for #4:* drop, impute, or flag these rows. Imputing a success measure would bias the analysis, so dropping or flagging is safer.
 6. **Unranked titles that have a score.** 1,322 anime have a `score` but no `ranked`, so `ranked` cannot stand in for `score`. Use `score` as the rating measure.
@@ -81,3 +83,40 @@ Findings for the cleaning step (#4). Each note states what was measured and what
 10. **Unresolved favorites.** 34 distinct anime IDs in `favorites_anime` (0.18% of references) have no matching anime record. They are harmless if dropped when favorites are counted.
 11. **Sparse demographics.** `gender` is missing for 35.52% of profiles and `birthday` for 43.93%, and many birthdays have no year. Demographic analysis would rest on a self-selected minority of reviewers. Profiles are reviewers only, so they don't represent MyAnimeList's general audience.
 12. **Snapshot timing is unrecorded.** The dataset has no scrape date. First-air years run 1917–2021, with a sharp drop after 2019 (610 titles in 2019, 187 in 2020, 6 in 2021). This suggests a snapshot from around 2020, so recent titles have had less time to gather members and reviews.
+
+## Cleaned tables
+
+Built by `uv run build-dataset` into `data/processed/`. In code, load them with:
+
+```python
+from capstone.dataset import load_anime, load_reviews
+
+anime = load_anime()      # builds the file first if it doesn't exist yet
+reviews = load_reviews()
+```
+
+How each column was cleaned, and how to handle its missing values, is in `report/data-cleaning.md`.
+
+### `anime.parquet`: 16,216 rows, one per anime
+
+| Column | Type | Meaning |
+|---|---|---|
+| `uid`, `title`, `synopsis`, `members`, `popularity`, `ranked`, `score`, `img_url`, `link` | as raw | Same meaning as in `animes.csv` above. Where scrapes of an anime disagreed, the values come from the copy with the most members. |
+| `genre` | list of text | Genre tags as a real list, e.g. `["Action", "Comedy"]`. |
+| `episodes` | whole number | Episode count; blank where unknown. |
+| `start_date` | date | First air date. A partial date ("Apr, 2010", "2014") is set to the first day of its period. |
+| `end_date` | date | Last air date. A partial date is set to the last day of its period. Blank if still airing, not available, or recorded before the start date on MyAnimeList. |
+| `start_year` | whole number | Year of `start_date`. |
+| `is_airing` | true/false | Still airing when the data was collected ("… to ?"). |
+| `n_reviews` | whole number | Reviews **in this dataset** (0 if none). Capped for some titles; **don't use it as review volume**. |
+| `mean_review_score` | number | Average overall rating from this anime's reviews (1–10). Blank if no reviews. |
+| `mean_story_score`, `mean_animation_score`, `mean_sound_score`, `mean_character_score`, `mean_enjoyment_score` | number | Average sub-ratings, from reviews that rated that category. |
+| `n_favorites` | whole number | Number of reviewers who list this anime as a favorite. Not affected by the review cap. |
+
+### `reviews.parquet`: 130,517 rows, one per review
+
+| Column | Type | Meaning |
+|---|---|---|
+| `uid`, `profile`, `anime_uid`, `score`, `link` | as raw | Same meaning as in `reviews.csv` above. Reviews scored outside 1–10 are removed. |
+| `text` | text | The review only. Page boilerplate ("more pics", sub-score header, "Helpful") is removed and whitespace tidied. |
+| `story_score`, `animation_score`, `sound_score`, `character_score`, `enjoyment_score` | whole number | The reviewer's sub-ratings (1–10). Blank where the reviewer didn't rate that category. |
