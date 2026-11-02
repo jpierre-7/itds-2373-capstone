@@ -32,7 +32,17 @@ The project uses [uv](https://docs.astral.sh/uv/) to manage Python and its packa
    uv run download-data
    ```
    This puts `animes.csv`, `profiles.csv` and `reviews.csv` in `data/raw/`. It's safe to run again: if the files are already there, it does nothing. The download is pinned to version 1 of the Kaggle dataset, so everyone gets the same data. kagglehub also keeps a cached copy in `~/.cache/kagglehub/` (about 700 MB). If `data/raw/` is deleted, the next run copies from that cache. You can delete the cache to free space. The `data/` folder is gitignored, so never commit data files.
-4. **Start working:**
+4. **Build the cleaned dataset.** This takes about 15 seconds.
+   ```sh
+   uv run build-dataset
+   ```
+   This writes `data/processed/anime.parquet` (one row per anime) and `data/processed/reviews.parquet` (one row per review). **Use these for analysis, not the raw CSVs.** In a notebook:
+   ```python
+   from capstone.dataset import load_anime, load_reviews
+   anime = load_anime()
+   ```
+   The columns are described in `docs/data-dictionary.md` under "Cleaned tables". If the cleaning code changes, rerun `uv run build-dataset`.
+5. **Start working:**
    - `uv run jupyter lab` opens notebooks.
    - `uv run pytest` runs the tests.
    - `uv add <package>` adds a dependency. Commit the updated `pyproject.toml` and `uv.lock` so everyone gets it.
