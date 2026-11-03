@@ -12,15 +12,15 @@ Group capstone for ITDS 2373 Data Mining Methods (HCC). The full assignment brie
 
 ## Team
 
-| Member | Role | Owns |
-|---|---|---|
-| John | Data Engineering & Acquisition Analyst | Data dictionary, cleaning report, final merged dataset, engineered features |
-| Leonardo | Market Intelligence & Visualization Analyst | EDA, at least 10 visualizations, dashboard, business insights |
-| Omonigho | Consumer Segmentation & Clustering Analyst | Clustering, cluster interpretation, segment recommendations |
-| Aaliyah | Predictive Analytics & Acquisition Strategist | Predictive models, feature importance, strategic ranking |
-| Yiesha | TBD | Extra teammate; will assist whichever role needs help |
+| Member | GitHub | Role | Owns |
+|---|---|---|---|
+| John | `jpierre-7` | Data Engineering & Acquisition Analyst | Data dictionary, cleaning report, final merged dataset, engineered features |
+| Leonardo | `leonardochica` | Market Intelligence & Visualization Analyst | EDA, at least 10 visualizations, dashboard, business insights, review sentiment analysis (shared with Yiesha) |
+| Omonigho | `omonigho-egbo-15` | Consumer Segmentation & Clustering Analyst | Clustering, cluster interpretation, segment recommendations |
+| Aaliyah | `Liyaph` | Predictive Analytics & Acquisition Strategist | Predictive models, feature importance, strategic ranking |
+| Yiesha | `Ycole90` | Market Intelligence & Visualization Analyst (with Leonardo) | Same tickets as Leonardo; both are assigned to each |
 
-Each member's contributions must be clearly attributable, so keep work scoped to the owning role, for example through issue assignees and per-role files or notebooks.
+Each member's contributions must be clearly attributable, so keep work scoped to the owning role, for example through issue assignees and per-role files or notebooks. Leonardo and Yiesha share their tickets, so their work should also show which of them did each part (for example, separate notebooks or commits).
 
 ## Agent skills
 
