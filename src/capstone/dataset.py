@@ -1,13 +1,19 @@
 """Build and load the team's cleaned datasets in data/processed/."""
 
+from collections.abc import Iterable
+from pathlib import Path
+
 import pandas as pd
 
 from capstone.clean import build_anime_table, clean_animes, clean_reviews
 from capstone.data import RAW_DIR, fetch_raw_data
+from capstone.features import add_features
 
 PROCESSED_DIR = RAW_DIR.parent / "processed"
 ANIME_PATH = PROCESSED_DIR / "anime.parquet"
 REVIEWS_PATH = PROCESSED_DIR / "reviews.parquet"
+# The code that produces the tables: a change to any of it makes the built files out of date.
+SOURCES = sorted(Path(__file__).parent.glob("*.py"))
 
 
 def build_dataset() -> dict[str, tuple[int, int]]:
@@ -18,7 +24,7 @@ def build_dataset() -> dict[str, tuple[int, int]]:
     profiles = pd.read_csv(RAW_DIR / "profiles.csv")
 
     reviews = clean_reviews(raw_reviews)
-    anime = build_anime_table(clean_animes(raw_animes), reviews, profiles)
+    anime = add_features(build_anime_table(clean_animes(raw_animes), reviews, profiles))
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     anime.to_parquet(ANIME_PATH, index=False)
@@ -26,16 +32,21 @@ def build_dataset() -> dict[str, tuple[int, int]]:
     return {"anime": (len(raw_animes), len(anime)), "reviews": (len(raw_reviews), len(reviews))}
 
 
+def needs_rebuild(output: Path, sources: Iterable[Path]) -> bool:
+    """True if output doesn't exist or is older than any of the code that builds it."""
+    return not output.exists() or output.stat().st_mtime < max(s.stat().st_mtime for s in sources)
+
+
 def load_anime() -> pd.DataFrame:
-    """The cleaned one-row-per-anime table, built first if it doesn't exist yet."""
-    if not ANIME_PATH.exists():
+    """The cleaned one-row-per-anime table, (re)built first if missing or older than the code."""
+    if needs_rebuild(ANIME_PATH, SOURCES):
         build_dataset()
     return pd.read_parquet(ANIME_PATH)
 
 
 def load_reviews() -> pd.DataFrame:
-    """The cleaned one-row-per-review table, built first if it doesn't exist yet."""
-    if not REVIEWS_PATH.exists():
+    """The cleaned one-row-per-review table, (re)built first if missing or older than the code."""
+    if needs_rebuild(REVIEWS_PATH, SOURCES):
         build_dataset()
     return pd.read_parquet(REVIEWS_PATH)
 

@@ -209,3 +209,9 @@ def test_clean_reviews_treats_zero_sub_scores_as_not_rated():
     reviews = clean_reviews(pd.DataFrame([raw_review(1, score=8, scores=partly_rated)]))
 
     assert reviews.loc[0, ["story_score", "animation_score", "sound_score"]].tolist() == [7, pd.NA, pd.NA]
+
+
+def test_clean_animes_drops_repeated_genre_tags():
+    raw = pd.DataFrame([raw_anime(1, genre="['Hentai', 'Hentai', 'School', 'School']")])  # as scraped for uid 5154
+
+    assert clean_animes(raw).loc[0, "genre"] == ["Hentai", "School"]

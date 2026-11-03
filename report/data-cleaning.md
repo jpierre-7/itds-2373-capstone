@@ -1,6 +1,6 @@
 # Data Cleaning and Preparation
 
-*Author: John (Data Engineering & Acquisition Analyst). Figures come from `notebooks/john/02-cleaning.ipynb`. The cleaning code is `src/capstone/clean.py`, covered by automated tests in `tests/test_clean.py`.*
+*Author: John (Data Engineering & Acquisition Analyst). Figures come from `notebooks/john/02-cleaning.ipynb` (cleaning) and `notebooks/john/03-features.ipynb` (engineered features). The code is `src/capstone/clean.py` and `src/capstone/features.py`, covered by automated tests in `tests/`.*
 
 ## Overview
 
@@ -8,7 +8,7 @@ The three raw files were cleaned and merged into two tables that the whole team 
 
 | Table | Rows | One row is… | Used for |
 |---|---|---|---|
-| `anime.parquet` | 16,216 | an anime, with review and favorites figures merged in | EDA, clustering, modeling, final ranking |
+| `anime.parquet` | 16,216 | an anime, with review and favorites figures merged in and engineered features added | EDA, clustering, modeling, final ranking |
 | `reviews.parquet` | 130,517 | a review, with cleaned text and sub-scores | sentiment analysis |
 
 Cleaning is fully automated and reproducible. Anyone on the team runs `uv run build-dataset` and gets identical tables, and a notebook check confirms every rule below held on the real data. Nothing is edited by hand.
@@ -37,7 +37,7 @@ Exact duplicate rows were removed first. Some records then still appeared more t
 | Raw field | Problem | Cleaned to |
 |---|---|---|
 | `aired` | free text in 24 different layouts ("Oct 4, 2015 to Mar 27, 2016", "Apr, 2010", "2014", "2020 to ?", "Not available") | `start_date`, `end_date`, `start_year`, `is_airing`. A partial date covers its whole period: "Apr, 2010" runs Apr 1–30, and "2013" as an end date means Dec 31, 2013. "… to ?" marks a show still airing when the data was collected (438 anime). |
-| `genre` | a list written as text | a real list (46,589 genre tags across all anime) |
+| `genre` | a list written as text | a real list (46,587 genre tags across all anime). One anime listed every tag twice; repeats are removed. |
 | `scores` | a dictionary written as text, e.g. `{'Overall': '8', 'Story': '7', …}` | five whole-number columns: `story_score`, `animation_score`, `sound_score`, `character_score`, `enjoyment_score`. Overall already equals `score` in every row, so it gets no extra column. |
 | review `text` | every review wrapped in page text: "more pics", the six sub-scores, then the review, then "Helpful", padded with blank lines | the review alone, whitespace tidied (median 345 words) |
 | `episodes` | decimal numbers (25.0) | whole numbers, blank where unknown |
@@ -80,6 +80,53 @@ Anime without reviews are **kept**, with `n_reviews = 0` and blank averages. Hal
 - Mean review scores remain usable, since 20 reviews is still a reasonable sample.
 - Treat a missing review-based score as "no data", not as a weak result.
 
+## 7. Engineered features
+
+Seven features, plus one flag column per genre, are added to `anime.parquet` for the clustering, modeling and ranking work. Each is defined in `docs/data-dictionary.md` under "Cleaned tables".
+
+### Popularity index
+
+`popularity_index` is the percentage of the catalog with at most as many members as the title, on a 0–100 scale. Death Note, the most-watched title, scores 100. A title at 90 has at least as many members as 90% of the catalog, which takes about 62,000 members. We based it on `members` alone so that it doesn't overlap with `n_favorites`, which the models use separately as a loyalty measure. A percentile is also easier to explain than raw counts, which range from 25 to 1.87 million.
+
+### Average review scores
+
+`mean_review_score` and the five category averages (section 4) are kept as they are. Half the reviewed anime have 3 reviews or fewer, though, so one enthusiastic review can put an obscure title at a perfect 10. `adjusted_review_score` corrects for this the way IMDb's weighted rating does. It blends each anime's reviews with five imaginary reviews at the catalog average of 7.33:
+
+```
+adjusted = (n_reviews × mean_review_score + 5 × 7.33) / (n_reviews + 5)
+```
+
+A single 10/10 review becomes 7.77. Death Note's 854 reviews move it by less than 0.01, and the median shift for titles with 20 or more reviews is 0.06. Anime with no reviews stay blank. Rankings that use review scores should use the adjusted score.
+
+### Genre features
+
+`genre_count` is the number of genre tags, and 43 true/false columns (`genre_action`, `genre_slice_of_life`, …) mark each genre. The notebook checks that every anime's flags add up to its `genre_count`.
+
+### Franchise indicators
+
+The dataset has no "related titles" field. MyAnimeList does list every season, movie and spin-off as its own entry, though, so franchises are inferred from titles. Each title is reduced to a root by removing:
+
+- a subtitle after ": "
+- an edition in brackets ("(2011)", "(TV)")
+- trailing sequel markers ("Season 2", "2nd Season", "Second Season", "Part 2", "S2", "II", "R2", a trailing number, "Movie", "OVA", "Specials")
+
+Titles that share a root form a franchise. "Naruto: Shippuuden", "Detective Conan (TV)" and "Code Geass: Hangyaku no Lelouch R2" all join their franchises this way. The resulting features:
+
+- `franchise`: the root
+- `franchise_size`: the number of entries
+- `franchise_members`: members summed across entries. This is total reach, not unique viewers, because a viewer who listed three seasons is counted three times.
+- `is_sequel`: True unless the entry is the franchise's earliest-starting one
+
+In total, 6,277 anime (39%) belong to 1,983 franchises with two or more entries. The largest by reach are Shingeki no Kyojin (12 entries, 4.6M members summed), Sword Art Online and Naruto.
+
+**Limits.** Matching on titles is a heuristic, and it fails in three known ways:
+
+- **Unrelated titles can share a root.** "Sin: The Movie" groups with "Sin: Nanatsu no Taizai".
+- **One franchise can split across roots** when a sequel's title changes. "K-On!!" is separate from "K-On!", and "Boruto" from "Naruto".
+- **Remakes and side stories count as sequels.** *Fullmetal Alchemist: Brotherhood* (2009) is marked as a sequel because the 2003 series came first.
+
+On the most popular titles the grouping is correct (notebook 03, section 4). Any franchise named in the final recommendations should be checked against its list of entries.
+
 ## Validation
 
 The cleaning notebook ends with checks that fail loudly if any rule is broken. All pass on the real data:
@@ -89,3 +136,4 @@ The cleaning notebook ends with checks that fail loudly if any rule is broken. A
 - no review text keeps the page header
 - no end date before its start date
 - every review is counted once in `n_reviews` and belongs to a cleaned anime
+- every anime's genre flags match its genre list
