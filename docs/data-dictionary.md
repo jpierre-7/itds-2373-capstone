@@ -91,18 +91,18 @@ Built by `uv run build-dataset` into `data/processed/`. In code, load them with:
 ```python
 from capstone.dataset import load_anime, load_reviews
 
-anime = load_anime()      # builds the file first if it doesn't exist yet
+anime = load_anime()      # (re)builds the files first if missing or older than the code
 reviews = load_reviews()
 ```
 
 How each column was cleaned, and how to handle its missing values, is in `report/data-cleaning.md`.
 
-### `anime.parquet`: 16,216 rows, one per anime
+### `anime.parquet`: 16,216 rows, one per anime, 73 columns
 
 | Column | Type | Meaning |
 |---|---|---|
 | `uid`, `title`, `synopsis`, `members`, `popularity`, `ranked`, `score`, `img_url`, `link` | as raw | Same meaning as in `animes.csv` above. Where scrapes of an anime disagreed, the values come from the copy with the most members. |
-| `genre` | list of text | Genre tags as a real list, e.g. `["Action", "Comedy"]`. |
+| `genre` | list of text | Genre tags as a real list, e.g. `["Action", "Comedy"]`. Repeated tags removed. |
 | `episodes` | whole number | Episode count; blank where unknown. |
 | `start_date` | date | First air date. A partial date ("Apr, 2010", "2014") is set to the first day of its period. |
 | `end_date` | date | Last air date. A partial date is set to the last day of its period. Blank if still airing, not available, or recorded before the start date on MyAnimeList. |
@@ -112,6 +112,19 @@ How each column was cleaned, and how to handle its missing values, is in `report
 | `mean_review_score` | number | Average overall rating from this anime's reviews (1–10). Blank if no reviews. |
 | `mean_story_score`, `mean_animation_score`, `mean_sound_score`, `mean_character_score`, `mean_enjoyment_score` | number | Average sub-ratings, from reviews that rated that category. |
 | `n_favorites` | whole number | Number of reviewers who list this anime as a favorite. Not affected by the review cap. |
+
+Engineered features (method and limits in `report/data-cleaning.md`, section 7):
+
+| Column | Type | Meaning |
+|---|---|---|
+| `popularity_index` | number (0–100) | Percentage of the catalog with at most as many members as this title. 100 = most-watched (Death Note). Based on `members` only. |
+| `adjusted_review_score` | number | `mean_review_score` blended with 5 imaginary reviews at the catalog average (7.33), so titles with few reviews are pulled toward the average. Blank if no reviews. Use this rather than `mean_review_score` when ranking. |
+| `genre_count` | whole number | Number of genre tags (0–13). |
+| `genre_<name>` | true/false | One column per genre (43 in all), e.g. `genre_action`, `genre_slice_of_life`, `genre_sci_fi`. True if the anime has that tag. |
+| `franchise` | text | Franchise root inferred from the title, e.g. "naruto" for "Naruto: Shippuuden". A heuristic: it can merge unrelated titles or split one franchise. |
+| `franchise_size` | whole number | Number of entries (seasons, movies, OVAs, specials) sharing the franchise root. 1 = standalone. |
+| `franchise_members` | whole number | `members` summed across the franchise's entries: total reach, not unique viewers. |
+| `is_sequel` | true/false | True unless this is the franchise's earliest-starting entry. Remakes and side stories count as sequels. |
 
 ### `reviews.parquet`: 130,517 rows, one per review
 

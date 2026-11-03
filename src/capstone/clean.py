@@ -53,7 +53,7 @@ def clean_animes(raw: pd.DataFrame) -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
-    animes["genre"] = animes["genre"].map(ast.literal_eval)
+    animes["genre"] = animes["genre"].map(lambda text: list(dict.fromkeys(ast.literal_eval(text))))  # uid 5154 lists each tag twice
     animes["episodes"] = animes["episodes"].astype("Int64")
 
     aired = animes.pop("aired").map(parse_aired)

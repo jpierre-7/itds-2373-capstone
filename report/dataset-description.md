@@ -33,7 +33,7 @@ The business question asks which anime will attract large audiences, have strong
 - **Quality.** `score` is the average user rating (1.25–9.23 across the catalog), and `ranked` orders titles by it. Fullmetal Alchemist: Brotherhood ranks first at 9.23.
 - **Sentiment.** 130,519 review texts (median 360 words) can be scored for sentiment. Each review also carries six numeric sub-ratings (Overall, Story, Animation, Sound, Character, Enjoyment), which allows a check of text sentiment against what reviewers scored.
 - **Loyalty.** Users' favorite lists show which titles inspire strong attachment, beyond simple viewing.
-- **Franchise signals.** The dataset has no explicit "related titles" or franchise field. However, MyAnimeList lists every season, sequel, movie, and spin-off as a separate entry (e.g. "Haikyuu!! Second Season"). Franchise membership therefore has to be inferred from titles, which feature engineering (#5) will do.
+- **Franchise signals.** The dataset has no explicit "related titles" or franchise field. However, MyAnimeList lists every season, sequel, movie, and spin-off as a separate entry (e.g. "Haikyuu!! Second Season"). Franchise membership therefore has to be inferred from titles. Feature engineering does this by grouping titles that share a root; see the Data Cleaning and Preparation section for the method and its limits.
 
 ## Limitations
 

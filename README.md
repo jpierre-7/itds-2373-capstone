@@ -41,7 +41,7 @@ The project uses [uv](https://docs.astral.sh/uv/) to manage Python and its packa
    from capstone.dataset import load_anime, load_reviews
    anime = load_anime()
    ```
-   The columns are described in `docs/data-dictionary.md` under "Cleaned tables". If the cleaning code changes, rerun `uv run build-dataset`.
+   The columns are described in `docs/data-dictionary.md` under "Cleaned tables". `load_anime()` and `load_reviews()` rebuild the files automatically when the code in `src/capstone/` is newer than the last build, for example after you pull changes. That load takes about 15 seconds.
 5. **Start working:**
    - `uv run jupyter lab` opens notebooks.
    - `uv run pytest` runs the tests.
