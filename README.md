@@ -10,7 +10,7 @@ Group capstone project for **ITDS 2373 Data Mining Methods** (HCC Eagle Online).
 | Leonardo | Market Intelligence & Visualization Analyst |
 | Omonigho | Consumer Segmentation & Clustering Analyst |
 | Aaliyah | Predictive Analytics & Acquisition Strategist |
-| Yiesha | TBD: extra teammate who will help whichever role needs it later |
+| Yiesha | Market Intelligence & Visualization Analyst (working with Leonardo) |
 
 The assignment is written for 4 members, each doing about 25% of the work. Every member must document their own contributions clearly.
 
@@ -79,7 +79,7 @@ Every recommendation must be data-driven and backed by evidence from the dataset
 - **Deliverables:** data dictionary, cleaning report, final merged dataset
 - **Report sections:** Dataset Description; Data Cleaning and Preparation
 
-### 2. Market Intelligence & Visualization Analyst (Leonardo)
+### 2. Market Intelligence & Visualization Analyst (Leonardo, with Yiesha)
 
 **Key question:** What characteristics appear to make anime successful?
 
