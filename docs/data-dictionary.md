@@ -135,7 +135,7 @@ Engineered features (method and limits in `report/data-cleaning.md`, section 7):
 | `franchise_members` | whole number | `members` summed across the franchise's entries: total reach, not unique viewers. |
 | `is_sequel` | true/false | True unless this is the franchise's earliest-starting entry. Remakes and side stories count as sequels. |
 
-Review sentiment (#6; method, validation and limits in `notebooks/leonardo/01-sentiment.ipynb`):
+Review sentiment (#6; method, findings and limits in `report/sentiment-analysis.md`, full analysis in `notebooks/leonardo/01-sentiment.ipynb`):
 
 Each review is scored with VADER, one sentence at a time, and its sentiment is the average over its sentences, from −1 (negative) to +1 (positive). Runs of more than 40 words without punctuation are cut into 40-word pieces. A review counts as **positive** at sentiment ≥ 0.12. That cutoff was tuned against review scores and replaces VADER's default of 0.05. All four columns are blank when the anime has no reviews: no reviews is not the same as neutral reviews. They describe only the reviews in this dataset, which are capped for some titles (see `n_reviews`).
 

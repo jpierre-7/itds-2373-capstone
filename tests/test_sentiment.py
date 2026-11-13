@@ -122,3 +122,22 @@ def test_cached_review_sentiment_only_scores_new_or_edited_reviews(tmp_path, mon
     assert scored_texts == ["Wonderful!", "Boring."]  # review 2 was edited, review 3 is new
     assert again["uid"].tolist() == [1, 2, 3]
     assert again.loc[1, "sentiment"] > 0 > again.loc[2, "sentiment"]
+
+
+def test_cached_review_sentiment_does_not_rescore_reviews_without_text(tmp_path, monkeypatch):
+    import capstone.sentiment as sentiment
+
+    cache = tmp_path / "review_sentiment.parquet"
+    reviews = pd.DataFrame({"uid": [1, 2], "anime_uid": [10, 20], "text": ["Amazing!", ""]})
+    first = cached_review_sentiment(reviews, cache)
+    assert math.isnan(first.loc[1, "sentiment"])  # no text: scored once, as blank
+
+    def fail(_):
+        raise AssertionError("a cached review was scored again")
+
+    monkeypatch.setattr(sentiment, "score_reviews", fail)
+    written = cache.stat().st_mtime_ns
+    again = cached_review_sentiment(reviews, cache)
+
+    assert again.equals(first)
+    assert cache.stat().st_mtime_ns == written  # cache not rewritten

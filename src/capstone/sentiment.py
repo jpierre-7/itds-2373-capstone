@@ -1,6 +1,6 @@
 """Review sentiment: sentence-level VADER scores per review (#6).
 
-Owner: Leonardo, Yiesha (Market Intelligence & Visualization Analyst).
+Owner: Leonardo (Market Intelligence & Visualization Analyst).
 
 Each review is split into sentences, every sentence gets a VADER compound score (-1 to +1),
 and the review's sentiment is the average over its sentences. Scoring a whole review at once
@@ -79,9 +79,10 @@ def cached_review_sentiment(reviews: pd.DataFrame, cache_path: Path) -> pd.DataF
     saved = pd.read_parquet(cache_path) if cache_path.exists() else pd.DataFrame(
         {"uid": pd.Series(dtype=current["uid"].dtype), "text_hash": pd.Series(dtype="uint64"), "sentiment": pd.Series(dtype=float)}
     )
-    merged = current.merge(saved[["uid", "text_hash", "sentiment"]], on=["uid", "text_hash"], how="left")
+    merged = current.merge(saved[["uid", "text_hash", "sentiment"]], on=["uid", "text_hash"], how="left", indicator=True)
 
-    missing = merged["sentiment"].isna()
+    # Rescore only reviews absent from the cache. A cached NaN (a review with no text) is a stored answer, not a gap.
+    missing = merged["_merge"] == "left_only"
     if missing.any():
         merged.loc[missing, "sentiment"] = score_reviews(merged[missing])["sentiment"].to_numpy()
         cache_path.parent.mkdir(parents=True, exist_ok=True)

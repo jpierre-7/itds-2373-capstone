@@ -1,6 +1,6 @@
 # Review Sentiment Analysis
 
-_Author: Leonardo, Yiesha (Market Intelligence & Visualization Analyst), ticket #6. Figures come from `notebooks/leonardo/01-sentiment.ipynb`. The code is `src/capstone/sentiment.py`, covered by automated tests in `tests/test_sentiment.py`. Column definitions are in `docs/data-dictionary.md`._
+_Author: Leonardo (Market Intelligence & Visualization Analyst), ticket #6. Figures come from `notebooks/leonardo/01-sentiment.ipynb`. The code is `src/capstone/sentiment.py`, covered by automated tests in `tests/test_sentiment.py`. Column definitions are in `docs/data-dictionary.md`._
 
 ## Overview
 
