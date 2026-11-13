@@ -32,7 +32,7 @@ The project uses [uv](https://docs.astral.sh/uv/) to manage Python and its packa
    uv run download-data
    ```
    This puts `animes.csv`, `profiles.csv` and `reviews.csv` in `data/raw/`. It's safe to run again: if the files are already there, it does nothing. The download is pinned to version 1 of the Kaggle dataset, so everyone gets the same data. kagglehub also keeps a cached copy in `~/.cache/kagglehub/` (about 700 MB). If `data/raw/` is deleted, the next run copies from that cache. You can delete the cache to free space. The `data/` folder is gitignored, so never commit data files.
-4. **Build the cleaned dataset.** This takes about 15 seconds.
+4. **Build the cleaned dataset.** The first build takes about 5 minutes, because it scores the sentiment of every review. Later builds reuse those scores and take under 30 seconds.
    ```sh
    uv run build-dataset
    ```
@@ -41,7 +41,7 @@ The project uses [uv](https://docs.astral.sh/uv/) to manage Python and its packa
    from capstone.dataset import load_anime, load_reviews
    anime = load_anime()
    ```
-   The columns are described in `docs/data-dictionary.md` under "Cleaned tables". `load_anime()` and `load_reviews()` rebuild the files automatically when the code in `src/capstone/` is newer than the last build, for example after you pull changes. That load takes about 15 seconds.
+   The columns are described in `docs/data-dictionary.md` under "Cleaned tables". `load_anime()` and `load_reviews()` rebuild the files automatically when the code in `src/capstone/` is newer than the last build, for example after you pull changes. That load takes under 30 seconds once the review sentiment scores exist.
 5. **Start working:**
    - `uv run jupyter lab` opens notebooks.
    - `uv run pytest` runs the tests.

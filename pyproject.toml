@@ -13,6 +13,7 @@ dependencies = [
     "pyarrow>=26.0.0",
     "scikit-learn>=1.9.1",
     "seaborn>=0.13.2",
+    "vadersentiment>=3.3.2",
 ]
 
 [project.scripts]

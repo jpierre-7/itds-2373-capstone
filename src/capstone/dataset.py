@@ -8,10 +8,13 @@ import pandas as pd
 from capstone.clean import build_anime_table, clean_animes, clean_reviews
 from capstone.data import RAW_DIR, fetch_raw_data
 from capstone.features import add_features
+from capstone.sentiment import SCORING_VERSION, add_sentiment, cached_review_sentiment
 
 PROCESSED_DIR = RAW_DIR.parent / "processed"
 ANIME_PATH = PROCESSED_DIR / "anime.parquet"
 REVIEWS_PATH = PROCESSED_DIR / "reviews.parquet"
+# Per-review sentiment scores. Scoring every review takes ~5 minutes, so rebuilds reuse this file.
+SENTIMENT_CACHE = PROCESSED_DIR / f"review_sentiment_v{SCORING_VERSION}.parquet"
 # The code that produces the tables: a change to any of it makes the built files out of date.
 SOURCES = sorted(Path(__file__).parent.glob("*.py"))
 
@@ -25,6 +28,7 @@ def build_dataset() -> dict[str, tuple[int, int]]:
 
     reviews = clean_reviews(raw_reviews)
     anime = add_features(build_anime_table(clean_animes(raw_animes), reviews, profiles))
+    anime = add_sentiment(anime, cached_review_sentiment(reviews, SENTIMENT_CACHE))
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     anime.to_parquet(ANIME_PATH, index=False)
