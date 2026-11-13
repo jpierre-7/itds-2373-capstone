@@ -97,7 +97,16 @@ reviews = load_reviews()
 
 How each column was cleaned, and how to handle its missing values, is in `report/data-cleaning.md`.
 
-### `anime.parquet`: 16,216 rows, one per anime, 73 columns
+The build also keeps per-review sentiment scores in `data/processed/review_sentiment_v1.parquet` (columns `uid`, `anime_uid`, `text_hash`, `sentiment`). Scoring every review takes about 5 minutes, so the first build is slow. Later builds reuse the saved scores and rescore only new or edited reviews. To get review-level sentiment in a notebook:
+
+```python
+from capstone.dataset import SENTIMENT_CACHE, load_reviews
+from capstone.sentiment import cached_review_sentiment
+
+scores = cached_review_sentiment(load_reviews(), SENTIMENT_CACHE)  # uid, anime_uid, sentiment
+```
+
+### `anime.parquet`: 16,216 rows, one per anime, 77 columns
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -125,6 +134,19 @@ Engineered features (method and limits in `report/data-cleaning.md`, section 7):
 | `franchise_size` | whole number | Number of entries (seasons, movies, OVAs, specials) sharing the franchise root. 1 = standalone. |
 | `franchise_members` | whole number | `members` summed across the franchise's entries: total reach, not unique viewers. |
 | `is_sequel` | true/false | True unless this is the franchise's earliest-starting entry. Remakes and side stories count as sequels. |
+
+Review sentiment (#6; method, validation and limits in `notebooks/leonardo/01-sentiment.ipynb`):
+
+Each review is scored with VADER, one sentence at a time, and its sentiment is the average over its sentences, from −1 (negative) to +1 (positive). Runs of more than 40 words without punctuation are cut into 40-word pieces. A review counts as **positive** at sentiment ≥ 0.12. That cutoff was tuned against review scores and replaces VADER's default of 0.05. All four columns are blank when the anime has no reviews: no reviews is not the same as neutral reviews. They describe only the reviews in this dataset, which are capped for some titles (see `n_reviews`).
+
+| Column | Type | Meaning |
+|---|---|---|
+| `mean_review_sentiment` | number (−1 to 1) | Average sentiment of the anime's reviews. Unreliable for titles with only a few reviews. Blank if no reviews. |
+| `adjusted_review_sentiment` | number (−1 to 1) | `mean_review_sentiment` blended with 5 imaginary reviews at the catalog average (0.195), like `adjusted_review_score`, so titles with few reviews are pulled toward the average. Blank if no reviews. Use this rather than the raw mean when ranking. |
+| `positive_review_share` | number (0–1) | Share of the anime's reviews with sentiment ≥ 0.12. An anime with one review gets exactly 0 or 1. Blank if no reviews. |
+| `adjusted_positive_share` | number (0–1) | `positive_review_share` blended with 5 imaginary reviews at the catalog share (0.67). Blank if no reviews. Use this rather than the raw share when ranking. |
+
+Sentiment agrees with the reviewer's own score (Spearman 0.49 between each review's sentiment and its `reviews.score`) but also reflects a show's **tone**: reviews of dark genres (horror, psychological, thriller) score lower than reviews of light genres even at the same 9–10 rating, although thriller has the highest mean review score of any large genre. Use these columns next to the scores, or compare within similar genres, rather than ranking on sentiment alone.
 
 ### `reviews.parquet`: 130,517 rows, one per review
 
