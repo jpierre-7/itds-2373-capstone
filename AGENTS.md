@@ -32,6 +32,15 @@ Issues are tracked in GitHub Issues for `jpierre-7/itds-2373-capstone` (via `gh`
 
 Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
+### Comments to teammates
+
+Most teammates hand their tickets to an AI tool. Every issue or PR comment written for a teammate ends with a `### Prompt for your AI/Agent` section, placed before any attribution footer. It is a fenced `text` block they can paste into their tool from the repo root. The prompt must:
+
+- name the repo and the files to read first (`AGENTS.md`, `README.md`, `docs/data-dictionary.md`)
+- load data only through the `capstone.dataset` loaders, and use only column names that exist
+- report only numbers produced by code that actually ran, and check that any issue or file exists before linking it
+- give numbered steps that end in a PR saying `Closes #N`
+
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
