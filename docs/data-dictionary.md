@@ -155,3 +155,14 @@ Sentiment agrees with the reviewer's own score (Spearman 0.49 between each revie
 | `uid`, `profile`, `anime_uid`, `score`, `link` | as raw | Same meaning as in `reviews.csv` above. Reviews scored outside 1–10 are removed. |
 | `text` | text | The review only. Page boilerplate ("more pics", sub-score header, "Helpful") is removed and whitespace tidied. |
 | `story_score`, `animation_score`, `sound_score`, `character_score`, `enjoyment_score` | whole number | The reviewer's sub-ratings (1–10). Blank where the reviewer didn't rate that category. |
+
+### Consumer Segmentation & Clustering Features
+
+These columns are produced by `src/capstone/clustering.py::run_clustering_pipeline` across standardized continuous variables (`score`, `popularity`, `n_favorites`, `episodes`, `adjusted_review_sentiment`).
+
+| Column Name | Data Type | Nullable | Description |
+| :--- | :--- | :---: | :--- |
+| `cluster_id` | `int64` | No | Discrete cluster integer ($k=5$, seed 42) ranging from `0` to `4`. |
+| `cluster_label` | `string` | No | Strategic business archetype: *Mainstream Hit*, *Hidden Gem*, *High-Rated Niche*, *Franchise Property*, *Underperforming Catalog*. |
+| `pca_x` | `float64` | Yes | First principal component projection coordinate for visual reporting. |
+| `pca_y` | `float64` | Yes | Second principal component projection coordinate for visual reporting. |
